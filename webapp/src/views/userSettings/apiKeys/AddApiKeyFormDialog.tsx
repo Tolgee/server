@@ -33,6 +33,9 @@ interface Value {
 interface Props {
   editKey?: ApiKeyDTO;
   loading?: boolean;
+  onClose?: () => void;
+  onSaved?: (data: components['schemas']['ApiKeyModel']) => void;
+  project?: components['schemas']['ProjectModel'];
 }
 
 const messageService = container.resolve(MessageService);
@@ -41,7 +44,13 @@ const setsIntersection = (set1: Set<unknown>, set2: Set<unknown>) =>
   new Set([...set1].filter((v) => set2.has(v)));
 
 export const AddApiKeyFormDialog: FunctionComponent<Props> = (props) => {
-  const onDialogClose = () => redirect(LINKS.USER_API_KEYS);
+  const onDialogClose = () => {
+    if (props.onClose) {
+      props.onClose();
+      return;
+    }
+    redirect(LINKS.USER_API_KEYS);
+  };
 
   const projects = useApiQuery({
     url: '/v2/projects',
@@ -84,7 +93,7 @@ export const AddApiKeyFormDialog: FunctionComponent<Props> = (props) => {
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
           messageService.success(<T>api_key_successfully_edited</T>);
           redirect(LINKS.USER_API_KEYS);
         },
@@ -93,6 +102,9 @@ export const AddApiKeyFormDialog: FunctionComponent<Props> = (props) => {
   };
 
   const handleAdd = (value) => {
+    if (props.project) {
+      value.projectId = props.project.id;
+    }
     generateLoadable.mutate(
       {
         content: {
@@ -103,8 +115,12 @@ export const AddApiKeyFormDialog: FunctionComponent<Props> = (props) => {
         },
       },
       {
-        onSuccess() {
+        onSuccess(data) {
           messageService.success(<T>api_key_successfully_generated</T>);
+          if (props.onSaved) {
+            props.onSaved(data);
+            return;
+          }
           redirect(LINKS.USER_API_KEYS);
         },
       }
@@ -181,7 +197,7 @@ export const AddApiKeyFormDialog: FunctionComponent<Props> = (props) => {
 
                   return (
                     <>
-                      {!props.editKey && (
+                      {!props.editKey && !props.project && (
                         <Select
                           fullWidth
                           name="projectId"
