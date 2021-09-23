@@ -43,6 +43,9 @@ const useStyles = makeStyles((theme) => ({
     }),
     width: theme.spacing(7),
   },
+  toggleRight: {
+    justifyContent: 'flex-end',
+  },
 }));
 
 interface SideMenuProps {
@@ -73,8 +76,12 @@ export const SideMenu: React.FC<SideMenuProps> = ({
       >
         {children}
         <Divider />
-        <ListItem button onClick={onSideMenuToggle}>
-          <ListItemIcon>
+        <ListItem
+          button
+          onClick={onSideMenuToggle}
+          className={classes.toggleRight}
+        >
+          <ListItemIcon className={classes.toggleRight}>
             {open ? <ChevronLeftIcon /> : <ChevronRightIcon />}
           </ListItemIcon>
         </ListItem>
