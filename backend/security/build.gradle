@@ -1,39 +1,13 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
+/*
+ * Copyright (c) 2020. Tolgee
+ */
 
 plugins {
-    id 'java'
-    id 'io.spring.dependency-management'
-    id 'org.jetbrains.kotlin.jvm'
-    id 'org.springframework.boot'
-    id "kotlin-allopen"
-
+    id 'io.tolgee.gradle.kotlin'
+    id 'io.tolgee.gradle.spring'
 }
 
 group = 'io.tolgee.security'
-
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: "org.jetbrains.kotlin.plugin.spring"
-apply plugin: 'org.springframework.boot'
-apply plugin: "kotlin-allopen"
-apply plugin: 'io.spring.dependency-management'
-
-repositories {
-    mavenCentral()
-}
-
-kotlin {
-    jvmToolchain(11)
-}
-
-allOpen {
-    annotation("org.springframework.stereotype.Component")
-    annotation("org.springframework.boot.test.context.SpringBootTest")
-}
 
 dependencies {
     implementation libs.kotlinCoroutines
@@ -66,7 +40,7 @@ dependencies {
     implementation libs.jjwtApi
     implementation libs.jjwtImpl
     implementation libs.jjwtJackson
-    implementation("com.github.ben-manes.caffeine:caffeine:3.0.5")
+    implementation libs.caffeineCaching
     api libs.postHog
 
     /**
@@ -77,6 +51,10 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test')
     // implementation libs.springmockk
     testImplementation libs.mockito
+}
+
+configurations {
+    all*.exclude group: 'com.vaadin.external.google', module: 'android-json'
 }
 
 test {

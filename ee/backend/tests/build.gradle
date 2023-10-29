@@ -1,34 +1,8 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-    }
-}
 
 plugins {
-    id 'io.spring.dependency-management'
-    id 'org.jetbrains.kotlin.jvm'
-    id 'org.springframework.boot'
-    id "java"
-    id "kotlin-allopen"
-}
-
-apply plugin: "kotlin-allopen"
-apply plugin: "org.jetbrains.kotlin.plugin.spring"
-
-allOpen {
-    annotation("javax.persistence.MappedSuperclass")
-    annotation("javax.persistence.Embeddable")
-    annotation("org.springframework.stereotype.Service")
-    annotation("org.springframework.stereotype.Component")
-    annotation("org.springframework.transaction.annotation.Transactional")
-    annotation("org.springframework.beans.factory.annotation.Configurable")
-    annotation("org.springframework.boot.test.context.SpringBootTest")
-}
-
-repositories {
-    mavenCentral()
+    id 'io.tolgee.gradle.kotlin'
+    id 'io.tolgee.gradle.spring'
+    id 'io.tolgee.gradle.hibernate'
 }
 
 test {
@@ -54,8 +28,8 @@ dependencies {
     testImplementation libs.jacksonModuleKotlin
 }
 
-kotlin {
-    jvmToolchain(11)
+configurations {
+    all*.exclude group: 'com.vaadin.external.google', module: 'android-json'
 }
 
 tasks.findByName("jar").enabled(true)

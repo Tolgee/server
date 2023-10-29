@@ -2,20 +2,10 @@
  * Copyright (c) 2020. Tolgee
  */
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-
 plugins {
-    id 'io.spring.dependency-management'
-    id 'org.springframework.boot'
-    id 'java'
-    id 'org.jetbrains.kotlin.jvm'
-    id "kotlin-jpa"
-    id "org.jetbrains.kotlin.kapt"
-    id "kotlin-allopen"
+    id 'io.tolgee.gradle.kotlin'
+    id 'io.tolgee.gradle.spring'
+    id 'io.tolgee.gradle.hibernate'
 }
 
 group = 'io.tolgee'
@@ -26,38 +16,6 @@ configurations {
         extendsFrom developmentOnly
     }
     ktlint
-}
-
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
-apply plugin: "org.jetbrains.kotlin.plugin.jpa"
-apply plugin: "kotlin-allopen"
-apply plugin: "kotlin-kapt"
-
-repositories {
-    mavenCentral()
-}
-
-kotlin {
-    jvmToolchain(11)
-}
-
-idea {
-    module {
-        generatedSourceDirs += files('build/generated/source/kapt/main', 'build/generated/source/kaptKotlin/main')
-    }
-}
-
-allOpen {
-    annotation("javax.persistence.Entity")
-    annotation("javax.persistence.MappedSuperclass")
-    annotation("javax.persistence.Embeddable")
-    annotation("org.springframework.stereotype.Component")
-    annotation("org.springframework.transaction.annotation.Transactional")
-    annotation("org.springframework.stereotype.Service")
-    annotation("org.springframework.beans.factory.annotation.Configurable")
 }
 
 dependencies {
