@@ -29,8 +29,20 @@ class NotificationService(
 
   fun save(notification: Notification) {
     notificationRepository.save(notification)
+    sendWebsocketEvent(notification.user.id)
+  }
+
+  fun markNotificationsAsSeen(notificationIds: List<Long>, userId: Long) {
+    val modifiedCount = notificationRepository.markNotificationsAsSeen(notificationIds, userId)
+
+    if (modifiedCount > 0) {
+      sendWebsocketEvent(userId)
+    }
+  }
+
+  private fun sendWebsocketEvent(userId: Long) {
     websocketEventPublisher(
-      "/users/${notification.user.id}/${WebsocketEventType.NOTIFICATIONS_CHANGED.typeName}",
+      "/users/$userId/${WebsocketEventType.NOTIFICATIONS_CHANGED.typeName}",
       WebsocketEvent(
         actor = ActorInfo(
           type = ActorType.USER,
