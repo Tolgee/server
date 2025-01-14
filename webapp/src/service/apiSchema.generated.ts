@@ -4804,11 +4804,13 @@ export interface components {
       project?: components["schemas"]["SimpleProjectModel"];
       linkedTask?: components["schemas"]["TaskModel"];
     };
-    PagedModelNotificationModel: {
+    NotificationPagedModel: {
       _embedded?: {
         notificationModelList?: components["schemas"]["NotificationModel"][];
       };
       page?: components["schemas"]["PageMetadata"];
+      /** Format: int32 */
+      unseenCount: number;
     };
     ApiKeyWithLanguagesModel: {
       /**
@@ -18074,7 +18076,7 @@ export interface operations {
       /** OK */
       200: {
         content: {
-          "application/json": components["schemas"]["PagedModelNotificationModel"];
+          "application/json": components["schemas"]["NotificationPagedModel"];
         };
       };
       /** Bad Request */
