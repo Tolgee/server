@@ -15,7 +15,7 @@ class TolgeeEmailSender(
   fun sendEmail(params: EmailParams) {
     validateProps()
     val helper = mimeMessageHelperFactory.create()
-    helper.setFrom(tolgeeProperties.smtp.from!!)
+    helper.setFrom(params.from ?: tolgeeProperties.smtp.from!!)
     helper.setTo(params.to)
     params.replyTo?.let {
       helper.setReplyTo(it)
@@ -57,4 +57,14 @@ class TolgeeEmailSender(
       )
     }
   }
+
+  fun getSignature(): String {
+    return """
+             <br /><br />
+             Best regards,
+             <br />
+             Tolgee Team
+             """.trimIndent()
+  }
+
 }

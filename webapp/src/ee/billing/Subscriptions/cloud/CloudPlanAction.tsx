@@ -1,11 +1,11 @@
 import { Box, styled } from '@mui/material';
-import { T, useTranslate } from '@tolgee/react';
+import { useTranslate } from '@tolgee/react';
 import { PrepareUpgradeDialog } from '../../PrepareUpgradeDialog';
-
-import { confirmation } from 'tg.hooks/confirmation';
 import LoadingButton from 'tg.component/common/form/LoadingButton';
 import { BillingPeriodType } from '../../component/Price/PeriodSwitch';
 import { usePlan } from '../../component/Plan/usePlan';
+import { useCancelCloudSubscription } from './useCancelCloudSubscription';
+import { useRestoreCloudSubscription } from './useRestoreCloudSubscription';
 
 export const StyledContainer = styled(Box)`
   justify-self: center;
@@ -18,7 +18,7 @@ export const StyledContainer = styled(Box)`
 `;
 
 type Props = {
-  organizationHasSomeSubscription: boolean;
+  hasActivePaidSubscription: boolean;
   active: boolean;
   ended: boolean;
   custom?: boolean;
@@ -31,16 +31,14 @@ export const PlanAction = ({
   active,
   ended,
   custom,
-  organizationHasSomeSubscription,
+  hasActivePaidSubscription,
   planId,
   period,
   show,
 }: Props) => {
   const {
-    cancelMutation,
     prepareUpgradeMutation,
     subscribeMutation,
-    onCancel,
     onPrepareUpgrade,
     onSubscribe,
   } = usePlan({
@@ -50,28 +48,23 @@ export const PlanAction = ({
 
   const { t } = useTranslate();
 
-  const handleCancel = () => {
-    confirmation({
-      title: <T keyName="billing_cancel_dialog_title" />,
-      message: <T keyName="billing_cancel_dialog_message" />,
-      onConfirm: onCancel,
-    });
-  };
+  const { cancelMutation, doCancel } = useCancelCloudSubscription();
+  const { restoreMutation, onRestore } = useRestoreCloudSubscription();
 
   function getLabelAndAction() {
     if (active && !ended) {
       return {
         loading: cancelMutation.isLoading,
-        onClick: handleCancel,
+        onClick: doCancel,
         label: t('billing_plan_cancel'),
       };
     } else if (active && ended) {
       return {
-        loading: prepareUpgradeMutation.isLoading,
-        onClick: () => onPrepareUpgrade(),
+        loading: restoreMutation.isLoading,
+        onClick: onRestore,
         label: t('billing_plan_resubscribe'),
       };
-    } else if (organizationHasSomeSubscription) {
+    } else if (hasActivePaidSubscription) {
       return {
         loading: prepareUpgradeMutation.isLoading,
         onClick: () => onPrepareUpgrade(),
