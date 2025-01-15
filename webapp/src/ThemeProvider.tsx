@@ -1,6 +1,9 @@
 import React, { useContext, useState } from 'react';
 import { createTheme, PaletteMode, useMediaQuery } from '@mui/material';
-import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import {
+  ThemeProvider as MuiThemeProvider,
+  PaletteColorOptions,
+} from '@mui/material/styles';
 
 import { TOP_BAR_HEIGHT } from 'tg.component/layout/TopBar/TopBar';
 // @ts-ignore
@@ -17,6 +20,17 @@ const LOCALSTORAGE_THEME_MODE = 'themeMode';
 const { palette } = createTheme();
 const { augmentColor } = palette;
 const createColor = (mainColor) => augmentColor({ color: { main: mainColor } });
+const fromFigma = (figmaColor: {
+  main: string;
+  dark: string;
+  light: string;
+  contrast: string;
+}): PaletteColorOptions => ({
+  main: figmaColor.main,
+  dark: figmaColor.dark,
+  light: figmaColor.light,
+  contrastText: figmaColor.contrast,
+});
 
 const rubik = {
   fontFamily: 'Rubik',
@@ -124,13 +138,13 @@ const getTheme = (mode: PaletteMode) => {
     },
     palette: {
       mode,
-      primary: tPalette.primary,
+      primary: fromFigma(tPalette.primary),
       primaryText: c.primaryText,
-      secondary: tPalette.secondary,
+      secondary: fromFigma(tPalette.secondary),
       default: createColor(c.default),
-      info: tPalette.info,
-      warning: tPalette.warning,
-      error: tPalette.error,
+      info: fromFigma(tPalette.info),
+      warning: fromFigma(tPalette.warning),
+      error: fromFigma(tPalette.error),
       common: {
         white: c.white,
       },
