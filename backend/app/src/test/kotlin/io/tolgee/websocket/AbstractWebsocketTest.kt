@@ -24,8 +24,9 @@ abstract class AbstractWebsocketTest : ProjectAuthControllerTest("/v2/projects/"
   lateinit var testData: BaseTestData
   lateinit var translation: Translation
   lateinit var key: Key
-  lateinit var notPermittedUser: UserAccount
-  lateinit var helper: WebsocketTestHelper
+  lateinit var anotherUser: UserAccount
+  lateinit var currentUserWebsocket: WebsocketTestHelper
+  lateinit var anotherUserWebsocket: WebsocketTestHelper
 
   @Autowired
   lateinit var notificationService: NotificationService
@@ -36,25 +37,32 @@ abstract class AbstractWebsocketTest : ProjectAuthControllerTest("/v2/projects/"
   @BeforeEach
   fun beforeEach() {
     prepareTestData()
-    helper =
+    currentUserWebsocket =
       WebsocketTestHelper(
         port,
         jwtService.emitToken(testData.user.id),
         testData.projectBuilder.self.id,
         testData.user.id,
       )
+    anotherUserWebsocket =
+      WebsocketTestHelper(
+        port,
+        jwtService.emitToken(anotherUser.id),
+        testData.projectBuilder.self.id,
+        anotherUser.id,
+      )
   }
 
   @AfterEach
   fun after() {
-    helper.stop()
+    currentUserWebsocket.stop()
   }
 
   @Test
   @ProjectJWTAuthTestMethod
   fun `notifies on key modification`() {
-    helper.listenForTranslationDataModified()
-    helper.assertNotified(
+    currentUserWebsocket.listenForTranslationDataModified()
+    currentUserWebsocket.assertNotified(
       {
         performProjectAuthPut("keys/${key.id}", mapOf("name" to "name edited"))
       },
@@ -89,8 +97,8 @@ abstract class AbstractWebsocketTest : ProjectAuthControllerTest("/v2/projects/"
   @Test
   @ProjectJWTAuthTestMethod
   fun `notifies on key deletion`() {
-    helper.listenForTranslationDataModified()
-    helper.assertNotified(
+    currentUserWebsocket.listenForTranslationDataModified()
+    currentUserWebsocket.assertNotified(
       {
         performProjectAuthDelete("keys/${key.id}")
       },
@@ -118,8 +126,8 @@ abstract class AbstractWebsocketTest : ProjectAuthControllerTest("/v2/projects/"
   @Test
   @ProjectJWTAuthTestMethod
   fun `notifies on key creation`() {
-    helper.listenForTranslationDataModified()
-    helper.assertNotified(
+    currentUserWebsocket.listenForTranslationDataModified()
+    currentUserWebsocket.assertNotified(
       {
         performProjectAuthPost("keys", mapOf("name" to "new key"))
       },
@@ -147,8 +155,8 @@ abstract class AbstractWebsocketTest : ProjectAuthControllerTest("/v2/projects/"
   @Test
   @ProjectJWTAuthTestMethod
   fun `notifies on translation modification`() {
-    helper.listenForTranslationDataModified()
-    helper.assertNotified(
+    currentUserWebsocket.listenForTranslationDataModified()
+    currentUserWebsocket.assertNotified(
       {
         performProjectAuthPut(
           "translations",
@@ -191,6 +199,25 @@ abstract class AbstractWebsocketTest : ProjectAuthControllerTest("/v2/projects/"
     }
   }
 
+  @Test
+  @ProjectJWTAuthTestMethod
+  fun `notifies user on change of his notification`() {
+    currentUserWebsocket.listenForNotificationsChanged()
+    anotherUserWebsocket.listenForNotificationsChanged()
+
+    currentUserWebsocket.assertNotified(
+      {
+        notificationService.save(Notification().apply { user = testData.user })
+      },
+    ) {
+      assertThatJson(it.poll()).apply {
+        node("timestamp").isNotNull
+      }
+    }
+
+    anotherUserWebsocket.receivedMessages.assert.isEmpty()
+  }
+
   /**
    * The request is made by permitted user, but user without permission tries to listen, so they shell
    * not be notified
@@ -198,15 +225,8 @@ abstract class AbstractWebsocketTest : ProjectAuthControllerTest("/v2/projects/"
   @Test
   @ProjectJWTAuthTestMethod
   fun `doesn't subscribe without permissions`() {
-    helper.listenForTranslationDataModified()
-    val notPermittedSubscriptionHelper =
-      WebsocketTestHelper(
-        port,
-        jwtService.emitToken(notPermittedUser.id),
-        testData.projectBuilder.self.id,
-        notPermittedUser.id,
-      )
-    notPermittedSubscriptionHelper.listenForTranslationDataModified()
+    currentUserWebsocket.listenForTranslationDataModified()
+    anotherUserWebsocket.listenForTranslationDataModified()
     performProjectAuthPut(
       "translations",
       mapOf(
@@ -215,31 +235,31 @@ abstract class AbstractWebsocketTest : ProjectAuthControllerTest("/v2/projects/"
       ),
     ).andIsOk
 
-    assertPermittedUserReceivedMessage()
-    notPermittedSubscriptionHelper.receivedMessages.assert.isEmpty()
+    assertCurrentUserReceivedMessage()
+    anotherUserWebsocket.receivedMessages.assert.isEmpty()
   }
 
   @Test
   @ProjectJWTAuthTestMethod
   fun `doesn't subscribe as another user`() {
-    helper.listenForNotificationsChanged()
-    val notPermittedSubscriptionHelper =
+    currentUserWebsocket.listenForNotificationsChanged()
+    val spyingUserWebsocket =
       WebsocketTestHelper(
         port,
-        jwtService.emitToken(notPermittedUser.id),
+        jwtService.emitToken(anotherUser.id),
         testData.projectBuilder.self.id,
-        testData.user.id, // notPermittedUser trying to spy on other user's websocket
+        testData.user.id, // anotherUser trying to spy on other user's websocket
       )
-    notPermittedSubscriptionHelper.listenForNotificationsChanged()
+    spyingUserWebsocket.listenForNotificationsChanged()
     notificationService.save(Notification().apply { user = testData.user })
 
-    assertPermittedUserReceivedMessage()
-    notPermittedSubscriptionHelper.receivedMessages.assert.isEmpty()
+    assertCurrentUserReceivedMessage()
+    spyingUserWebsocket.receivedMessages.assert.isEmpty()
   }
 
-  private fun assertPermittedUserReceivedMessage() {
+  private fun assertCurrentUserReceivedMessage() {
     (0..100).forEach {
-      if (helper.receivedMessages.isNotEmpty()) {
+      if (currentUserWebsocket.receivedMessages.isNotEmpty()) {
         return
       }
       Thread.sleep(10)
@@ -251,8 +271,8 @@ abstract class AbstractWebsocketTest : ProjectAuthControllerTest("/v2/projects/"
   private fun prepareTestData() {
     testData = BaseTestData()
     testData.root.addUserAccount {
-      username = "franta"
-      notPermittedUser = this
+      username = "anotherUser"
+      anotherUser = this
     }
     testData.projectBuilder.apply {
       addKey {
