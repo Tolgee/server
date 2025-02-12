@@ -3123,12 +3123,6 @@ export interface components {
       };
       page?: components["schemas"]["PageMetadata"];
     };
-    PagedModelNotificationModel: {
-      _embedded?: {
-        notificationModelList?: components["schemas"]["NotificationModel"][];
-      };
-      page?: components["schemas"]["PageMetadata"];
-    };
     PagedModelOrganizationModel: {
       _embedded?: {
         organizations?: components["schemas"]["OrganizationModel"][];
@@ -3223,6 +3217,17 @@ export interface components {
       _embedded?: {
         webhookConfigs?: components["schemas"]["WebhookConfigModel"][];
       };
+      page?: components["schemas"]["PageMetadata"];
+    };
+    PagedModelWithNextCursorNotificationModel: {
+      _embedded?: {
+        notificationModelList?: components["schemas"]["NotificationModel"][];
+      };
+      /**
+       * @description Cursor to get next data
+       * @example eyJrZXlJZCI6eyJkaXJlY3Rpb24iOiJBU0MiLCJ2YWx1ZSI6IjEwMDAwMDAxMjAifX0=
+       */
+      nextCursor?: string;
       page?: components["schemas"]["PageMetadata"];
     };
     PatModel: {
@@ -6764,7 +6769,7 @@ export interface operations {
       /** OK */
       200: {
         content: {
-          "application/json": components["schemas"]["PagedModelNotificationModel"];
+          "application/json": components["schemas"]["PagedModelWithNextCursorNotificationModel"];
         };
       };
       /** Bad Request */
