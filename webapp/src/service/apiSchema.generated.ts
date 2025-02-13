@@ -149,6 +149,10 @@ export interface paths {
   "/v2/notifications-mark-seen": {
     put: operations["markNotificationsAsSeen"];
   };
+  "/v2/notifications-settings": {
+    get: operations["getNotificationsSettings"];
+    put: operations["putNotificationSetting"];
+  };
   "/v2/organizations": {
     /** Returns all organizations, which is current user allowed to view */
     get: operations["getAll_10"];
@@ -1790,7 +1794,7 @@ export interface components {
         | "expired_jwt_token"
         | "general_jwt_error"
         | "cannot_find_suitable_address_part"
-        | "address_part_not_unique"
+        | "slug_not_unique"
         | "user_is_not_member_of_organization"
         | "organization_has_no_other_owner"
         | "user_has_no_project_access"
@@ -2960,6 +2964,14 @@ export interface components {
         | "MFA_ENABLED"
         | "MFA_DISABLED"
         | "PASSWORD_CHANGED";
+    };
+    NotificationSettingGroupModel: {
+      email: boolean;
+      inApp: boolean;
+    };
+    NotificationSettingModel: {
+      accountSecurity: components["schemas"]["NotificationSettingGroupModel"];
+      tasks: components["schemas"]["NotificationSettingGroupModel"];
     };
     NotificationsMarkSeenRequest: {
       /**
@@ -4176,7 +4188,7 @@ export interface components {
         | "expired_jwt_token"
         | "general_jwt_error"
         | "cannot_find_suitable_address_part"
-        | "address_part_not_unique"
+        | "slug_not_unique"
         | "user_is_not_member_of_organization"
         | "organization_has_no_other_owner"
         | "user_has_no_project_access"
@@ -6829,6 +6841,93 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["NotificationsMarkSeenRequest"];
+      };
+    };
+  };
+  getNotificationsSettings: {
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["NotificationSettingModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  putNotificationSetting: {
+    parameters: {
+      query: {
+        group: "ACCOUNT_SECURITY" | "TASKS";
+        channel: "IN_APP" | "EMAIL";
+        enabled: boolean;
+      };
+    };
+    responses: {
+      /** OK */
+      200: unknown;
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
       };
     };
   };
@@ -10544,10 +10643,13 @@ export interface operations {
       };
     };
     responses: {
-      /** OK */
+      /**
+       * When multiple files are exported, they are zipped and returned as a single zip file.
+       * When a single file is exported, it is returned directly.
+       */
       200: {
         content: {
-          "application/json": components["schemas"]["StreamingResponseBody"];
+          "application/*": unknown;
         };
       };
       /** Bad Request */
@@ -10592,10 +10694,13 @@ export interface operations {
       };
     };
     responses: {
-      /** OK */
+      /**
+       * When multiple files are exported, they are zipped and returned as a single zip file.
+       * When a single file is exported, it is returned directly.
+       */
       200: {
         content: {
-          "application/json": components["schemas"]["StreamingResponseBody"];
+          "application/*": unknown;
         };
       };
       /** Bad Request */
