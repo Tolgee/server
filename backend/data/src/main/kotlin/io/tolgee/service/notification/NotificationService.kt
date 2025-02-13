@@ -4,6 +4,7 @@ import io.tolgee.dtos.request.notification.NotificationFilters
 import io.tolgee.events.OnNotificationsChangedForUser
 import io.tolgee.model.notifications.Notification
 import io.tolgee.model.notifications.NotificationChannel
+import io.tolgee.model.notifications.NotificationTypeGroup
 import io.tolgee.repository.notification.NotificationRepository
 import jakarta.transaction.Transactional
 import org.springframework.context.ApplicationEventPublisher
@@ -19,6 +20,7 @@ class NotificationService(
   private val emailNotificationsService: EmailNotificationsService,
   private val notificationSettingsService: NotificationSettingsService,
 ) {
+
   fun getNotifications(
     userId: Long,
     pageable: Pageable,
@@ -43,6 +45,9 @@ class NotificationService(
 
   @Transactional
   fun notify(notification: Notification) {
+    if (notification.type.group == NotificationTypeGroup.TASKS && notification.linkedTask == null) {
+      throw IllegalArgumentException("Task notification must have a linked task")
+    }
     if (notificationSettingsService.getSettingValue(notification, NotificationChannel.EMAIL)) {
       emailNotificationsService.sendEmailNotification(notification)
     }
